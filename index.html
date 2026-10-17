@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Gerak Berirama - PJOK Kelas 5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'sky-soft': '#E0F2FE',
+                        'sky-main': '#38BDF8',
+                        'sky-dark': '#0284C7',
+                        'pink-soft': '#FCE7F3',
+                        'pink-main': '#EC4899',
+                        'pink-accent': '#F43F5E'
+                    },
+                    aspectRatio: {
+                        '16/9': '16 / 9',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background-color: #0f172a;
+            user-select: none;
+        }
+
+        /* Responsive 16:9 Aspect Ratio Container */
+        .game-container {
+            width: 100vw;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            max-height: 100vh;
+            margin: auto;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Bounce animation for avatars */
+        @keyframes rhythmBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.02); }
+        }
+
+        .animate-rhythm {
+            animation: rhythmBounce 0.8s ease-in-out infinite;
+        }
+
+        /* Pulse rhythm indicator */
+        @keyframes pulseBeat {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .pulse-beat {
+            animation: pulseBeat 0.5s infinite;
+        }
+
+        /* Step Animations for Preview */
+        @keyframes stepBiasa {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-20px) translateX(20px); }
+        }
+        @keyframes stepRapat {
+            0%, 100% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+        }
+        @keyframes stepDepan {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-25px); }
+        }
+        @keyframes stepSamping {
+            0%, 100% { transform: translateX(-30px); }
+            50% { transform: translateX(30px); }
+        }
+        @keyframes stepKeseimbangan {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            30% { transform: translateY(-20px) rotate(-5deg); }
+            60% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .anim-biasa { animation: stepBiasa 1.2s infinite ease-in-out; }
+        .anim-rapat { animation: stepRapat 1.2s infinite ease-in-out; }
+        .anim-depan { animation: stepDepan 1s infinite ease-in-out; }
+        .anim-samping { animation: stepSamping 1.4s infinite ease-in-out; }
+        .anim-keseimbangan { animation: stepKeseimbangan 1.6s infinite ease-in-out; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #E0F2FE;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #38BDF8;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-slate-900 p-2 md:p-4">
+
+    <!-- Main 16:9 Canvas Frame -->
+    <div class="game-container bg-gradient-to-br from-sky-200 via-sky-100 to-pink-100 rounded-3xl border-4 border-white flex flex-col justify-between text-slate-800 shadow-2xl relative">
+
+        <!-- HEADER BAR -->
+        <header class="bg-white/80 backdrop-blur-md px-6 py-3 flex justify-between items-center border-b-2 border-sky-200 z-10 shadow-sm">
+            <div class="flex items-center space-x-3">
+                <div class="bg-sky-500 text-white p-2.5 rounded-2xl shadow-md">
+                    <i class="fa-solid fa-person-walking-arrow-right text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-sky-800 text-lg md:text-xl leading-none">Petualangan Gerak Berirama</h1>
+                    <span class="text-xs font-semibold text-pink-600 bg-pink-100 px-2 py-0.5 rounded-full inline-block mt-1">PJOK Kelas 5 • Jenis-Jenis Langkah</span>
+                </div>
+            </div>
+
+            <!-- Dynamic Header Stats / Controls -->
+            <div class="flex items-center space-x-3">
+                <div id="scoreDisplay" class="hidden bg-sky-100 border border-sky-300 px-4 py-1.5 rounded-xl font-bold text-sky-700 flex items-center gap-2">
+                    <i class="fa-solid fa-star text-amber-400 text-lg"></i>
+                    <span>Skor: <span id="currentScore">0</span></span>
+                </div>
+                
+                <button onclick="toggleAudio()" id="audioBtn" class="bg-white border-2 border-sky-300 hover:bg-sky-50 text-sky-600 p-2.5 rounded-xl transition shadow-sm active:scale-95" title="Musik/Suara">
+                    <i class="fa-solid fa-volume-high text-lg"></i>
+                </button>
+
+                <button onclick="showDeveloperModal()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition shadow-md flex items-center gap-2 active:scale-95">
+                    <i class="fa-solid fa-id-card"></i>
+                    <span class="hidden sm:inline">Pengembang</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- SCREEN CONTENT AREA -->
+        <main class="relative flex-1 overflow-hidden p-4 md:p-6 flex items-center justify-center">
+
+            <!-- 1. HOME SCREEN -->
+            <section id="homeScreen" class="w-full h-full flex flex-col items-center justify-center text-center space-y-6 z-10">
+                <div class="space-y-2">
+                    <span class="bg-pink-500 text-white px-4 py-1 rounded-full font-bold text-sm tracking-wide uppercase shadow-sm">Modul Praktik PJOK</span>
+                    <h2 class="text-3xl md:text-5xl font-extrabold text-sky-900 drop-shadow-sm">Ayo Belajar & Mempraktikkan<br/><span class="text-pink-500">Gerak Langkah Berirama!</span></h2>
+                    <p class="text-slate-600 max-w-xl text-sm md:text-base">Kuasai 5 jenis langkah dasar senam irama: Langkah Biasa, Rapat, Depan, Samping, dan Keseimbangan!</p>
+                </div>
+
+                <!-- Animated Characters Showcase -->
+                <div class="flex items-center justify-center space-x-6 my-4">
+                    <div class="w-20 h-20 md:w-28 md:h-28 bg-white rounded-full border-4 border-sky-400 shadow-lg flex items-center justify-center animate-rhythm text-sky-500 text-4xl md:text-5xl">
+                        <i class="fa-solid fa-person-running"></i>
+                    </div>
+                    <div class="w-24 h-24 md:w-32 md:h-32 bg-pink-400 rounded-full border-4 border-white shadow-xl flex items-center justify-center animate-rhythm text-white text-5xl md:text-6xl" style="animation-delay: 0.2s">
+                        <i class="fa-solid fa-music"></i>
+                    </div>
+                    <div class="w-20 h-20 md:w-28 md:h-28 bg-white rounded-full border-4 border-sky-400 shadow-lg flex items-center justify-center animate-rhythm text-sky-500 text-4xl md:text-5xl" style="animation-delay: 0.4s">
+                        <i class="fa-solid fa-child-reaching"></i>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+                    <button onclick="switchScreen('materiScreen')" class="flex-1 bg-white hover:bg-sky-50 border-2 border-sky-400 text-sky-700 font-bold py-3 px-6 rounded-2xl shadow-lg transition transform hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-2 text-lg">
+                        <i class="fa-solid fa-book-open text-sky-500"></i> Pelajari Materi
+                    </button>
+                    <button onclick="startRhythmGame()" class="flex-1 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-2xl shadow-lg shadow-pink-300 transition transform hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-2 text-lg">
+                        <i class="fa-solid fa-gamepad"></i> Mainkan Game
+                    </button>
+                </div>
+            </section>
+
+            <!-- 2. MATERI SCREEN (Belajar 5 Jenis Langkah) -->
+            <section id="materiScreen" class="hidden w-full h-full flex flex-col justify-between">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-xl md:text-2xl font-bold text-sky-900 flex items-center gap-2">
+                        <i class="fa-solid fa-graduation-cap text-pink-500"></i> Materi 5 Jenis Langkah
+                    </h2>
+                    <span class="text-xs md:text-sm bg-white px-3 py-1 rounded-lg border border-sky-200 font-semibold text-slate-600">Klik jenis langkah untuk melihat gerakan!</span>
+                </div>
+
+                <!-- Step Navigator & Card Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3 my-auto">
+                    <!-- Card 1 -->
+                    <button onclick="selectMateri(0)" id="materiTab0" class="materi-tab bg-white border-2 border-sky-300 hover:border-pink-400 p-3 rounded-2xl text-center shadow-sm transition flex flex-col items-center justify-center gap-1 active:scale-95">
+                        <div class="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600 font-bold">1</div>
+                        <span class="font-bold text-sm text-slate-800">Langkah Biasa</span>
+                        <span class="text-[10px] text-pink-500 font-semibold">(Loppas)</span>
+                    </button>
+
+                    <!-- Card 2 -->
+                    <button onclick="selectMateri(1)" id="materiTab1" class="materi-tab bg-white border-2 border-sky-300 hover:border-pink-400 p-3 rounded-2xl text-center shadow-sm transition flex flex-col items-center justify-center gap-1 active:scale-95">
+                        <div class="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600 font-bold">2</div>
+                        <span class="font-bold text-sm text-slate-800">Langkah Rapat</span>
+                        <span class="text-[10px] text-pink-500 font-semibold">(Bijtrekpas)</span>
+                    </button>
+
+                    <!-- Card 3 -->
+                    <button onclick="selectMateri(2)" id="materiTab2" class="materi-tab bg-white border-2 border-sky-300 hover:border-pink-400 p-3 rounded-2xl text-center shadow-sm transition flex flex-col items-center justify-center gap-1 active:scale-95">
+                        <div class="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600 font-bold">3</div>
+                        <span class="font-bold text-sm text-slate-800">Langkah Depan</span>
+                        <span class="text-[10px] text-pink-500 font-semibold">(Galoppas)</span>
+                    </button>
+
+                    <!-- Card 4 -->
+                    <button onclick="selectMateri(3)" id="materiTab3" class="materi-tab bg-white border-2 border-sky-300 hover:border-pink-400 p-3 rounded-2xl text-center shadow-sm transition flex flex-col items-center justify-center gap-1 active:scale-95">
+                        <div class="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600 font-bold">4</div>
+                        <span class="font-bold text-sm text-slate-800">Langkah Samping</span>
+                        <span class="text-[10px] text-pink-500 font-semibold">(Zijpas)</span>
+                    </button>
+
+                    <!-- Card 5 -->
+                    <button onclick="selectMateri(4)" id="materiTab4" class="materi-tab bg-white border-2 border-sky-300 hover:border-pink-400 p-3 rounded-2xl text-center shadow-sm transition flex flex-col items-center justify-center gap-1 active:scale-95">
+                        <div class="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600 font-bold">5</div>
+                        <span class="font-bold text-sm text-slate-800">Keseimbangan</span>
+                        <span class="text-[10px] text-pink-500 font-semibold">(Balanspas)</span>
+                    </button>
+                </div>
+
+                <!-- Display Detail Box -->
+                <div class="bg-white rounded-2xl border-2 border-sky-200 p-4 md:p-5 flex flex-col md:flex-row items-center gap-6 shadow-md min-h-[190px]">
+                    <div class="w-28 h-28 md:w-36 md:h-36 bg-sky-100 rounded-2xl border-2 border-sky-300 flex items-center justify-center shrink-0 relative overflow-hidden">
+                        <!-- Animated Icon Container -->
+                        <div id="materiAnimBox" class="text-6xl text-sky-600">
+                            <i class="fa-solid fa-person-walking"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1 space-y-2 text-left">
+                        <div class="flex items-center gap-2">
+                            <h3 id="materiTitle" class="text-xl font-bold text-sky-900">Judul Langkah</h3>
+                            <span id="materiTerm" class="bg-pink-100 text-pink-600 text-xs font-bold px-2.5 py-1 rounded-full">Istilah</span>
+                        </div>
+                        <p id="materiDesc" class="text-slate-600 text-sm md:text-base leading-relaxed">Penjelasan langkah akan ditampilkan di sini.</p>
+                        <div class="bg-sky-50 border-l-4 border-sky-400 p-2 rounded text-xs md:text-sm text-sky-800 font-medium" id="materiTip">
+                            <strong>Tips Praktik:</strong> <span id="materiTipText">Petunjuk gerakan...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Bottom -->
+                <div class="flex justify-between items-center pt-2">
+                    <button onclick="switchScreen('homeScreen')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-xl text-sm transition">
+                        <i class="fa-solid fa-arrow-left"></i> Kembali
+                    </button>
+                    <button onclick="startRhythmGame()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold px-6 py-2 rounded-xl text-sm transition shadow-md">
+                        Mulai Latihan Game <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 3. RHYTHM MINI-GAME & SIMULATION -->
+            <section id="gameScreen" class="hidden w-full h-full flex flex-col justify-between relative">
+                <!-- Top Status -->
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-sky-500 text-white text-xs font-bold px-3 py-1 rounded-full">Tingkat <span id="gameLevel">1</span>/5</span>
+                        <h3 id="targetStepName" class="font-bold text-sky-900 text-lg">Praktik: Langkah Biasa</h3>
+                    </div>
+                    <div id="rhythmIndicator" class="flex items-center gap-2 bg-white px-3 py-1 rounded-xl border border-pink-300 shadow-sm">
+                        <div class="w-3 h-3 bg-pink-500 rounded-full pulse-beat"></div>
+                        <span class="text-xs font-bold text-pink-600">Irama Musik: <span id="rhythmBpmText">4/4 Sedang</span></span>
+                    </div>
+                </div>
+
+                <!-- Visual Arena / Stage -->
+                <div class="relative flex-1 my-2 bg-gradient-to-b from-sky-300/30 to-pink-200/40 rounded-2xl border-2 border-white/80 overflow-hidden flex flex-col items-center justify-center p-4">
+                    
+                    <!-- Sound Wave Visualizer Beat Indicator -->
+                    <div class="absolute top-4 flex justify-center items-end gap-1.5 h-8">
+                        <div id="wave1" class="w-2 bg-sky-400 rounded-full transition-all duration-150 h-4"></div>
+                        <div id="wave2" class="w-2 bg-pink-400 rounded-full transition-all duration-150 h-6"></div>
+                        <div id="wave3" class="w-2 bg-sky-500 rounded-full transition-all duration-150 h-3"></div>
+                        <div id="wave4" class="w-2 bg-pink-500 rounded-full transition-all duration-150 h-8"></div>
+                        <div id="wave5" class="w-2 bg-sky-400 rounded-full transition-all duration-150 h-5"></div>
+                    </div>
+
+                    <!-- Main Animated Runner Avatar -->
+                    <div class="relative my-auto flex flex-col items-center">
+                        <div id="gameAvatar" class="w-24 h-24 md:w-32 md:h-32 bg-white rounded-full border-4 border-pink-400 shadow-xl flex items-center justify-center text-5xl md:text-6xl text-sky-600 mb-2 transition-transform">
+                            <i class="fa-solid fa-person-walking"></i>
+                        </div>
+                        <span id="avatarActionLabel" class="bg-white/90 px-4 py-1 rounded-full text-xs md:text-sm font-bold text-sky-800 shadow-sm border border-sky-200">
+                            Dengarkan Irama Lagu!
+                        </span>
+                    </div>
+
+                    <!-- Prompt Instruction Box -->
+                    <div class="bg-white/90 backdrop-blur-sm px-6 py-2 rounded-2xl border border-sky-200 text-center shadow-md">
+                        <p id="gamePromptText" class="text-sm md:text-base font-semibold text-slate-700">Dengarkan irama musik dan pilih jenis langkah yang sesuai!</p>
+                    </div>
+                </div>
+
+                <!-- Action Step Buttons Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+                    <button onclick="checkStepAnswer('biasa')" class="step-btn bg-white hover:bg-sky-50 border-2 border-sky-300 active:border-pink-500 p-2.5 rounded-xl font-bold text-xs md:text-sm text-slate-800 shadow transition flex flex-col items-center justify-center gap-1 active:scale-95">
+                        <i class="fa-solid fa-walking text-sky-500 text-base"></i> Langkah Biasa
+                    </button>
+                    <button onclick="checkStepAnswer('rapat')" class="step-btn bg-white hover:bg-sky-50 border-2 border-sky-300 active:border-pink-500 p-2.5 rounded-xl font-bold text-xs md:text-sm text-slate-800 shadow transition flex flex-col items-center justify-center gap-1 active:scale-95">
+                        <i class="fa-solid fa-arrows-to-line text-pink-500 text-base"></i> Langkah Rapat
+                    </button>
+                    <button onclick="checkStepAnswer('depan')" class="step-btn bg-white hover:bg-sky-50 border-2 border-sky-300 active:border-pink-500 p-2.5 rounded-xl font-bold text-xs md:text-sm text-slate-800 shadow transition flex flex-col items-center justify-center gap-1 active:scale-95">
+                        <i class="fa-solid fa-arrow-up text-sky-500 text-base"></i> Langkah Depan
+                    </button>
+                    <button onclick="checkStepAnswer('samping')" class="step-btn bg-white hover:bg-sky-50 border-2 border-sky-300 active:border-pink-500 p-2.5 rounded-xl font-bold text-xs md:text-sm text-slate-800 shadow transition flex flex-col items-center justify-center gap-1 active:scale-95">
+                        <i class="fa-solid fa-arrows-left-right text-pink-500 text-base"></i> Langkah Samping
+                    </button>
+                    <button onclick="checkStepAnswer('keseimbangan')" class="col-span-2 md:col-span-1 step-btn bg-white hover:bg-sky-50 border-2 border-sky-300 active:border-pink-500 p-2.5 rounded-xl font-bold text-xs md:text-sm text-slate-800 shadow transition flex flex-col items-center justify-center gap-1 active:scale-95">
+                        <i class="fa-solid fa-scale-balanced text-sky-500 text-base"></i> Keseimbangan
+                    </button>
+                </div>
+            </section>
+
+            <!-- 4. QUIZ / EVALUATION SCREEN -->
+            <section id="quizScreen" class="hidden w-full h-full flex flex-col justify-between">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="bg-pink-100 text-pink-600 font-bold text-xs px-3 py-1 rounded-full border border-pink-200">Kuis Evaluasi PJOK</span>
+                    <span class="text-xs font-semibold text-slate-500">Soal <span id="quizNum">1</span> dari 5</span>
+                </div>
+
+                <!-- Quiz Card -->
+                <div class="bg-white rounded-3xl border-2 border-sky-200 p-6 shadow-lg my-auto space-y-4">
+                    <h3 id="quizQuestion" class="text-base md:text-lg font-bold text-sky-950 leading-relaxed">
+                        Pertanyaan kuis akan ditampilkan di sini?
+                    </h3>
+
+                    <div id="quizOptions" class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                        <!-- Options dynamically generated -->
+                    </div>
+                </div>
+
+                <!-- Quiz Bottom Nav -->
+                <div class="flex justify-between items-center pt-2">
+                    <button onclick="switchScreen('homeScreen')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-xl text-sm transition">
+                        <i class="fa-solid fa-house"></i> Menu Utama
+                    </button>
+                    <span class="text-xs text-slate-400">Pilihlah jawaban yang paling benar!</span>
+                </div>
+            </section>
+
+            <!-- 5. RESULT SCORE SCREEN -->
+            <section id="resultScreen" class="hidden w-full h-full flex flex-col items-center justify-center text-center space-y-5">
+                <div class="w-24 h-24 bg-amber-100 border-4 border-amber-300 rounded-full flex items-center justify-center text-amber-500 text-5xl shadow-lg animate-bounce">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-extrabold text-sky-900">Luar Biasa! Praktik Selesai!</h2>
+                    <p class="text-slate-600 text-sm mt-1">Kamu telah menyelesaikan pembelajaran & kuis Gerak Berirama.</p>
+                </div>
+
+                <div class="bg-white border-2 border-sky-200 rounded-2xl p-6 shadow-md w-full max-w-sm space-y-2">
+                    <div class="text-sm font-semibold text-slate-500">Total Skor Akhir</div>
+                    <div id="finalScore" class="text-5xl font-extrabold text-pink-500">100</div>
+                    <div id="scoreFeedback" class="text-xs md:text-sm font-bold text-sky-700 pt-2">Sangat Baik! Kamu menguasai semua jenis langkah!</div>
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="switchScreen('homeScreen')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-6 py-2.5 rounded-xl text-sm transition">
+                        <i class="fa-solid fa-house"></i> Beranda
+                    </button>
+                    <button onclick="startRhythmGame()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition shadow-md">
+                        <i class="fa-solid fa-rotate-right"></i> Coba Lagi
+                    </button>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- FOOTER BAR -->
+        <footer class="bg-white/80 backdrop-blur-md px-6 py-2 border-t border-sky-200 flex justify-between items-center text-xs text-slate-500 font-medium">
+            <span>Media Pembelajaran PJOK • Fase A / Kelas 5</span>
+            <span class="text-sky-700 font-bold">Materi: Gerak Berirama (Langkah)</span>
+        </footer>
+
+        <!-- FEEDBACK OVERLAY MODAL (Benar / Salah) -->
+        <div id="feedbackModal" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div id="feedbackBox" class="bg-white border-4 border-emerald-400 rounded-3xl p-6 max-w-md w-full text-center shadow-2xl space-y-4 transform transition-all scale-95">
+                <div id="feedbackIcon" class="w-20 h-20 mx-auto rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center text-4xl border-2 border-emerald-300">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h3 id="feedbackTitle" class="text-2xl font-extrabold text-slate-800">Jawaban Tepat!</h3>
+                <p id="feedbackText" class="text-slate-600 text-sm leading-relaxed">Penjelasan umpan balik akan muncul di sini.</p>
+                <button id="feedbackBtn" onclick="closeFeedback()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold w-full py-3 rounded-2xl shadow-lg transition active:scale-95">
+                    Lanjutkan <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- DEVELOPER CREDITS MODAL -->
+        <div id="developerModal" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white border-4 border-sky-300 rounded-3xl p-6 max-w-md w-full text-center shadow-2xl space-y-5 relative">
+                <button onclick="hideDeveloperModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+
+                <div class="w-20 h-20 bg-gradient-to-tr from-sky-400 to-pink-400 rounded-full mx-auto border-4 border-white shadow-md flex items-center justify-center text-white text-3xl">
+                    <i class="fa-solid fa-user-gear"></i>
+                </div>
+
+                <div>
+                    <span class="text-xs font-bold text-pink-500 bg-pink-100 px-3 py-1 rounded-full uppercase">Profil Pengembang</span>
+                    <h3 class="text-2xl font-extrabold text-sky-900 mt-2">Ilham Yanis</h3>
+                    <p class="text-slate-600 font-semibold text-sm">SDN Kowel 3</p>
+                </div>
+
+                <div class="bg-sky-50 rounded-2xl p-4 border border-sky-200 text-xs text-slate-600 space-y-1 text-left">
+                    <p><strong>Mata Pelajaran:</strong> PJOK (Pendidikan Jasmani, Olahraga, dan Kesehatan)</p>
+                    <p><strong>Kelas / Fase:</strong> Kelas 5 / Fase A</p>
+                    <p><strong>Materi:</strong> Aktivitas Gerak Berirama (Variasi Langkah)</p>
+                    <p><strong>Format:</strong> HTML5 Responsive (16:9 Aspect Ratio)</p>
+                </div>
+
+                <button onclick="hideDeveloperModal()" class="bg-sky-500 hover:bg-sky-600 text-white font-bold w-full py-2.5 rounded-xl shadow-md transition">
+                    Tutup
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /* RHYTHMIC MUSIC SYNTHESIZER (Web Audio API for dynamic musical beats) */
+        let audioEnabled = true;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+        let bgRhythmInterval = null;
+        let currentTempoMs = 600; // ms per beat
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Custom musical beat sound player
+        function playBeatTone(freq, duration, type = 'sine', volume = 0.2) {
+            if (!audioEnabled || !audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio beat error:", e);
+            }
+        }
+
+        // Start background musical rhythm matched to step tempo
+        function startStepRhythm(tempoMs, baseNote = 261.63) { // 261.63 Hz = C4
+            stopStepRhythm();
+            currentTempoMs = tempoMs;
+            let beatCount = 0;
+
+            bgRhythmInterval = setInterval(() => {
+                if (!audioEnabled) return;
+                initAudio();
+
+                beatCount = (beatCount % 4) + 1;
+
+                // Animate music visualizers
+                for (let i = 1; i <= 5; i++) {
+                    const el = document.getElementById(`wave${i}`);
+                    if (el) {
+                        const randomHeight = Math.floor(Math.random() * 24) + 8;
+                        el.style.height = `${randomHeight}px`;
+                    }
+                }
+
+                if (beatCount === 1) {
+                    // Accent first beat of 4/4 measure
+                    playBeatTone(baseNote * 1.5, 0.25, 'triangle', 0.25); // Higher pitch G4
+                } else {
+                    // Regular beat pulse
+                    playBeatTone(baseNote, 0.15, 'sine', 0.15); // C4 pitch
+                }
+            }, tempoMs);
+        }
+
+        function stopStepRhythm() {
+            if (bgRhythmInterval) {
+                clearInterval(bgRhythmInterval);
+                bgRhythmInterval = null;
+            }
+        }
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.exponentialRampToValueAtTime(659.25, audioCtx.currentTime + 0.15); // E5
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
+                    osc.frequency.exponentialRampToValueAtTime(130.81, audioCtx.currentTime + 0.2); // C4
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else if (type === 'click') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.05);
+                }
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const btn = document.getElementById('audioBtn');
+            if (audioEnabled) {
+                btn.innerHTML = '<i class="fa-solid fa-volume-high text-lg"></i>';
+                btn.classList.remove('text-slate-400');
+                btn.classList.add('text-sky-600');
+            } else {
+                stopStepRhythm();
+                btn.innerHTML = '<i class="fa-solid fa-volume-xmark text-lg"></i>';
+                btn.classList.add('text-slate-400');
+                btn.classList.remove('text-sky-600');
+            }
+        }
+
+        /* DATA MATERI GERAK LANGKAH */
+        const materiData = [
+            {
+                title: "Langkah Biasa",
+                term: "Loppas",
+                icon: "fa-person-walking",
+                animClass: "anim-biasa",
+                tempoMs: 600,
+                bpmLabel: "4/4 Santai (Sedang)",
+                noteFreq: 261.63,
+                desc: "Berdiri tegak. Melangkahkan kaki kiri ke depan diikuti kaki kanan. Dilakukan melangkah santai mengikuti irama ketukan musik 3/4 atau 4/4.",
+                tip: "Tumit menyentuh lantai terlebih dahulu, lalu telapak kaki."
+            },
+            {
+                title: "Langkah Rapat",
+                term: "Bijtrekpas",
+                icon: "fa-arrows-to-line",
+                animClass: "anim-rapat",
+                tempoMs: 500,
+                bpmLabel: "4/4 Stabil & Rapat",
+                noteFreq: 293.66,
+                desc: "Melangkahkan kaki kanan ke depan, lalu kaki kiri menyusul dirapatkan dengan kaki kanan. Setiap langkah diakhiri posisi kaki rapat.",
+                tip: "Irama langkah harus stabil dan posisi badan tetap tegak tegap."
+            },
+            {
+                title: "Langkah Depan",
+                term: "Galoppas",
+                icon: "fa-arrow-up",
+                animClass: "anim-depan",
+                tempoMs: 400,
+                bpmLabel: "4/4 Cepat & Ceria",
+                noteFreq: 329.63,
+                desc: "Melangkahkan kaki kanan ke depan, lalu sebelum kaki kanan mendarat, kaki kiri menyusul mendorong ke depan.",
+                tip: "Gerakan seperti melompat kecil secara kontinyu ke arah depan."
+            },
+            {
+                title: "Langkah Samping",
+                term: "Zijpas",
+                icon: "fa-arrows-left-right",
+                animClass: "anim-samping",
+                tempoMs: 550,
+                bpmLabel: "4/4 Menyilang / Samping",
+                noteFreq: 349.23,
+                desc: "Melangkahkan kaki kiri ke samping kiri, kemudian kaki kanan menyusul dirapatkan ke samping kaki kiri.",
+                tip: "Jaga keseimbangan lutut agak mengeper saat melangkah ke samping."
+            },
+            {
+                title: "Langkah Keseimbangan",
+                term: "Balanspas",
+                icon: "fa-scale-balanced",
+                animClass: "anim-keseimbangan",
+                tempoMs: 750,
+                bpmLabel: "4/4 Halus & Lambat",
+                noteFreq: 392.00,
+                desc: "Melangkahkan kaki kiri ke depan. Saat tumit terangkat, melangkah dengan kaki kanan, lalu kembali ditahan sejenak untuk keseimbangan.",
+                tip: "Fokuskan pandangan mata lurus ke depan agar badan tidak goyah."
+            }
+        ];
+
+        /* GAME STATE VARIABLES */
+        let currentScore = 0;
+        let gameLevel = 0;
+        let currentQuizIndex = 0;
+
+        const gameQuestions = [
+            { targetKey: 'biasa', prompt: "Dengarkan irama musik santai! Pilih langkah melangkah santai ke depan (Loppas)!" },
+            { targetKey: 'rapat', prompt: "Dengarkan ketukan stabil! Pilih langkah dirapatkan di setiap akhir (Bijtrekpas)!" },
+            { targetKey: 'depan', prompt: "Dengarkan musik cepat! Pilih langkah dorong ke depan secara teratur (Galoppas)!" },
+            { targetKey: 'samping', prompt: "Dengarkan irama mengayun! Pilih langkah menggeser ke samping (Zijpas)!" },
+            { targetKey: 'keseimbangan', prompt: "Dengarkan irama lambat! Pilih langkah dengan menahan posisi stabil (Balanspas)!" }
+        ];
+
+        const quizData = [
+            {
+                q: "Istilah lain dari 'Langkah Biasa' dalam senam irama adalah...",
+                options: ["Loppas", "Bijtrekpas", "Zijpas", "Balanspas"],
+                correct: 0,
+                hint: "Istilah ini diawali huruf L."
+            },
+            {
+                q: "Ketika melakukan 'Langkah Rapat' (Bijtrekpas), gerakan diakhiri dengan...",
+                options: ["Kedua kaki dibuka lebar", "Kedua kaki dirapatkan kembali", "Melompat ke udara", "Berputar 360 derajat"],
+                correct: 1,
+                hint: "Sesuai namanya 'Langkah Rapat', posisi kedua kaki saling rapat."
+            },
+            {
+                q: "Gerakan melangkah ke samping kiri atau kanan dinamakan...",
+                options: ["Galoppas", "Loppas", "Zijpas", "Balanspas"],
+                correct: 2,
+                hint: "Zijpas merupakan istilah untuk langkah samping."
+            },
+            {
+                q: "Apa tujuan utama saat melakukan gerakan Langkah Keseimbangan (Balanspas)?",
+                options: ["Berlari secepat mungkin", "Menjaga kestabilan tubuh saat melangkah", "Menyentuh lantai dengan tangan", "Melompat tinggi"],
+                correct: 1,
+                hint: "Keseimbangan berguna agar tubuh tidak mudah goyah atau jatuh."
+            },
+            {
+                q: "Gerak berirama/senam irama mengutamakan kesesuaian antara gerakan langkah dengan...",
+                options: ["Kecepatan angin", "Irama ketukan musik", "Ukuran lapangan", "Berat badan"],
+                correct: 1,
+                hint: "Seluruh gerakan senam irama diiringi oleh ketukan musik."
+            }
+        ];
+
+        /* NAVIGATION FUNCTIONS */
+        function switchScreen(screenId) {
+            playSound('click');
+            stopStepRhythm();
+
+            const screens = ['homeScreen', 'materiScreen', 'gameScreen', 'quizScreen', 'resultScreen'];
+            screens.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            if (screenId === 'gameScreen' || screenId === 'quizScreen' || screenId === 'resultScreen') {
+                scoreDisplay.classList.remove('hidden');
+            } else {
+                scoreDisplay.classList.add('hidden');
+            }
+
+            if (screenId === 'materiScreen') {
+                selectMateri(0);
+            }
+        }
+
+        /* MATERI FUNCTIONS */
+        function selectMateri(index) {
+            playSound('click');
+            const data = materiData[index];
+            document.getElementById('materiTitle').innerText = data.title;
+            document.getElementById('materiTerm').innerText = data.term;
+            document.getElementById('materiDesc').innerText = data.desc;
+            document.getElementById('materiTipText').innerText = data.tip;
+
+            // Reset animation
+            const animBox = document.getElementById('materiAnimBox');
+            animBox.className = `text-6xl text-sky-600 ${data.animClass}`;
+            animBox.innerHTML = `<i class="fa-solid ${data.icon}"></i>`;
+
+            // Active Tab UI Highlight
+            for (let i = 0; i < 5; i++) {
+                const tab = document.getElementById(`materiTab${i}`);
+                if (i === index) {
+                    tab.classList.add('border-pink-500', 'bg-pink-50', 'ring-2', 'ring-pink-300');
+                    tab.classList.remove('border-sky-300', 'bg-white');
+                } else {
+                    tab.classList.remove('border-pink-500', 'bg-pink-50', 'ring-2', 'ring-pink-300');
+                    tab.classList.add('border-sky-300', 'bg-white');
+                }
+            }
+
+            // Play background sample beat for this step
+            startStepRhythm(data.tempoMs, data.noteFreq);
+        }
+
+        /* GAME RHYTHM LOGIC */
+        function startRhythmGame() {
+            currentScore = 0;
+            gameLevel = 0;
+            updateScoreDisplay();
+            switchScreen('gameScreen');
+            loadGameLevel();
+        }
+
+        function loadGameLevel() {
+            if (gameLevel >= gameQuestions.length) {
+                stopStepRhythm();
+                showFeedback(
+                    true,
+                    "Hebat! Praktik Langkah Selesai!",
+                    "Kamu berhasil memperagakan semua jenis langkah dengan irama yang benar! Sekarang ayo uji pemahamanmu di Kuis Evaluasi.",
+                    () => { startQuiz(); }
+                );
+                return;
+            }
+
+            const current = gameQuestions[gameLevel];
+            const targetData = materiData[gameLevel];
+
+            document.getElementById('gameLevel').innerText = gameLevel + 1;
+            document.getElementById('targetStepName').innerText = `Tingkat ${gameLevel + 1}: Praktik Langkah`;
+            document.getElementById('gamePromptText').innerText = current.prompt;
+            document.getElementById('rhythmBpmText').innerText = targetData.bpmLabel;
+
+            const avatar = document.getElementById('gameAvatar');
+            avatar.className = "w-24 h-24 md:w-32 md:h-32 bg-white rounded-full border-4 border-pink-400 shadow-xl flex items-center justify-center text-5xl md:text-6xl text-sky-600 mb-2 transition-transform animate-rhythm";
+            document.getElementById('avatarActionLabel').innerText = "Dengarkan Irama Musik!";
+
+            // Start specific step musical tempo
+            startStepRhythm(targetData.tempoMs, targetData.noteFreq);
+        }
+
+        function checkStepAnswer(selectedKey) {
+            const current = gameQuestions[gameLevel];
+            const targetData = materiData.find(m => m.term.toLowerCase().includes(selectedKey) || m.title.toLowerCase().includes(selectedKey));
+
+            if (selectedKey === current.targetKey) {
+                playSound('correct');
+                currentScore += 10;
+                updateScoreDisplay();
+
+                // Play animation on avatar
+                const avatar = document.getElementById('gameAvatar');
+                avatar.className = `w-24 h-24 md:w-32 md:h-32 bg-emerald-100 rounded-full border-4 border-emerald-400 shadow-xl flex items-center justify-center text-5xl md:text-6xl text-emerald-600 mb-2 ${targetData.animClass}`;
+                document.getElementById('avatarActionLabel').innerText = `Gerakan Tepat: ${targetData.title}!`;
+
+                showFeedback(
+                    true,
+                    "Jawaban Kamu Benar! ✨",
+                    `Bagus sekali! Langkahmu sesuai dengan ketukan irama musik untuk ${targetData.title} (${targetData.term}).`,
+                    () => {
+                        gameLevel++;
+                        loadGameLevel();
+                    }
+                );
+            } else {
+                playSound('wrong');
+                showFeedback(
+                    false,
+                    "Jawaban Kamu Salah! 😅",
+                    `Jawaban kamu kurang tepat. Dengarkan ketukan irama musik dengan teliti dan coba lagi!`,
+                    () => { /* Retry current level */ }
+                );
+            }
+        }
+
+        /* QUIZ EVALUASI LOGIC */
+        function startQuiz() {
+            stopStepRhythm();
+            currentQuizIndex = 0;
+            switchScreen('quizScreen');
+            loadQuizQuestion();
+        }
+
+        function loadQuizQuestion() {
+            if (currentQuizIndex >= quizData.length) {
+                showFinalResults();
+                return;
+            }
+
+            const qData = quizData[currentQuizIndex];
+            document.getElementById('quizNum').innerText = currentQuizIndex + 1;
+            document.getElementById('quizQuestion').innerText = `${currentQuizIndex + 1}. ${qData.q}`;
+
+            const optionsContainer = document.getElementById('quizOptions');
+            optionsContainer.innerHTML = '';
+
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left bg-sky-50 hover:bg-pink-50 border-2 border-sky-200 hover:border-pink-300 p-3.5 rounded-2xl font-semibold text-sm md:text-base text-slate-800 transition shadow-sm flex items-center gap-3 active:scale-95";
+                btn.innerHTML = `
+                    <span class="w-7 h-7 bg-white border border-sky-300 rounded-xl flex items-center justify-center text-xs font-bold text-sky-600 shrink-0">${String.fromCharCode(65 + idx)}</span>
+                    <span>${opt}</span>
+                `;
+                btn.onclick = () => handleQuizAnswer(idx);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleQuizAnswer(selectedIdx) {
+            const qData = quizData[currentQuizIndex];
+
+            if (selectedIdx === qData.correct) {
+                playSound('correct');
+                currentScore += 10;
+                updateScoreDisplay();
+
+                showFeedback(
+                    true,
+                    "Jawaban Kamu Benar! 🎉",
+                    `Hebat! Jawabanmu tepat sekali.`,
+                    () => {
+                        currentQuizIndex++;
+                        loadQuizQuestion();
+                    }
+                );
+            } else {
+                playSound('wrong');
+                showFeedback(
+                    false,
+                    "Jawaban Kamu Salah! 🤔",
+                    `Jawaban kamu kurang tepat. Petunjuk: ${qData.hint}. Silakan coba jawab sekali lagi!`,
+                    () => { /* Retry same question */ }
+                );
+            }
+        }
+
+        /* FEEDBACK MODAL & UTILS */
+        function showFeedback(isCorrect, title, message, onConfirm) {
+            const modal = document.getElementById('feedbackModal');
+            const box = document.getElementById('feedbackBox');
+            const icon = document.getElementById('feedbackIcon');
+            const titleEl = document.getElementById('feedbackTitle');
+            const textEl = document.getElementById('feedbackText');
+            const btn = document.getElementById('feedbackBtn');
+
+            titleEl.innerText = title;
+            textEl.innerText = message;
+
+            if (isCorrect) {
+                box.className = "bg-white border-4 border-emerald-400 rounded-3xl p-6 max-w-md w-full text-center shadow-2xl space-y-4 transform transition-all scale-100";
+                icon.className = "w-20 h-20 mx-auto rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center text-4xl border-2 border-emerald-300";
+                icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                btn.className = "bg-emerald-500 hover:bg-emerald-600 text-white font-bold w-full py-3 rounded-2xl shadow-lg transition active:scale-95";
+                btn.innerHTML = 'Lanjutkan <i class="fa-solid fa-arrow-right ml-1"></i>';
+            } else {
+                box.className = "bg-white border-4 border-pink-400 rounded-3xl p-6 max-w-md w-full text-center shadow-2xl space-y-4 transform transition-all scale-100";
+                icon.className = "w-20 h-20 mx-auto rounded-full bg-pink-100 text-pink-500 flex items-center justify-center text-4xl border-2 border-pink-300";
+                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                btn.className = "bg-pink-500 hover:bg-pink-600 text-white font-bold w-full py-3 rounded-2xl shadow-lg transition active:scale-95";
+                btn.innerHTML = 'Coba Lagi <i class="fa-solid fa-rotate-right ml-1"></i>';
+            }
+
+            modal.classList.remove('hidden');
+
+            btn.onclick = () => {
+                modal.classList.add('hidden');
+                if (onConfirm) onConfirm();
+            };
+        }
+
+        function closeFeedback() {
+            document.getElementById('feedbackModal').classList.add('hidden');
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('currentScore').innerText = currentScore;
+        }
+
+        function showFinalResults() {
+            stopStepRhythm();
+            switchScreen('resultScreen');
+            document.getElementById('finalScore').innerText = currentScore;
+            
+            const feedbackText = document.getElementById('scoreFeedback');
+            if (currentScore >= 90) {
+                feedbackText.innerText = "Luar Biasa! Kamu sangat menguasai variasi gerak langkah berirama!";
+            } else if (currentScore >= 70) {
+                feedbackText.innerText = "Bagus Sekali! Terus berlatih agar gerakanmu semakin luwes dan sesuai irama!";
+            } else {
+                feedbackText.innerText = "Tetap Semangat! Pelajari materi lagi dan coba dapatkan skor tertinggi!";
+            }
+        }
+
+        /* DEVELOPER MODAL */
+        function showDeveloperModal() {
+            playSound('click');
+            document.getElementById('developerModal').classList.remove('hidden');
+        }
+
+        function hideDeveloperModal() {
+            playSound('click');
+            document.getElementById('developerModal').classList.add('hidden');
+        }
+
+        // Initialize Audio Context on first interaction
+        document.body.addEventListener('click', () => {
+            initAudio();
+        }, { once: true });
+    </script>
+</body>
+</html>
